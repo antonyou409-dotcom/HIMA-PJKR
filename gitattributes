@@ -1,0 +1,41 @@
+# ----------------------------------------------------------------------
+# 1. PENGATURAN DEFAULT (AUTO NORMALISASI BARIS TEKS)
+# ----------------------------------------------------------------------
+# Memastikan semua file teks dinormalisasi ke LF saat masuk ke repositori Git
+* text=auto
+
+# ----------------------------------------------------------------------
+# 2. FILE SOURCE KODE (PHP, HTML, CSS)
+# ----------------------------------------------------------------------
+# Menjaga file kode utama tetap menggunakan LF (standar industri & server web)
+*.php text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+
+# ----------------------------------------------------------------------
+# 3. FILE KONFIGURASI & DOKUMENTASI
+# ----------------------------------------------------------------------
+*.json text eol=lf
+*.md text eol=lf
+*.sql text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# ----------------------------------------------------------------------
+# 4. FILE BINER / ASSETS (GAMBAR & STATIS)
+# ----------------------------------------------------------------------
+# Mencegah Git mencoba merusak file gambar atau biner saat proses git push/pull
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+*.webp binary
+
+# ----------------------------------------------------------------------
+# 5. LINGUIST OVERRIDES (UNTUK DETEKSI BAHASA DI GITHUB)
+# ----------------------------------------------------------------------
+# Memastikan repositori mendeteksi file PHP Anda sebagai bahasa utama proyek
+*.php linguist-language=PHP
