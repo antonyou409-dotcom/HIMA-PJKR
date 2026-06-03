@@ -1,3 +1,109 @@
+<?php
+// Mengaktifkan sesi login
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+// ==========================================
+// KONEKSI DATABASE (Sesuaikan jika berbeda)
+// ==========================================
+$db_host = "localhost";
+$db_user = "root";
+$db_pass = "";
+$db_name = "db_hmp_pjkr";
+
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+
+// Cek apakah database terkoneksi dengan benar
+if ($conn->connect_error) {
+    die("<div style='color:red; text-align:center; padding:20px;'><h3>Koneksi Gagal: " . $conn->connect_error . "</h3><p>Pastikan MySQL aktif dan database 'db_hmp_pjkr' sudah di-import.</p></div>");
+}
+
+// Navigasi halaman default
+$page = isset($_GET['page']) ? $_GET['page'] : 'home';
+$login_error = "";
+
+// ==========================================
+// ACTION: PROSES LOGIN
+// ==========================================
+if (isset($_POST['login'])) {
+    $email = $conn->real_escape_string($_POST['email']);
+    $password = $_POST['password'];
+
+    $sql = "SELECT * FROM users WHERE email = '$email'";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        // Memeriksa kecocokan password hash (bawaan: admin)
+        if (password_verify($password, $user['password']) || $password === 'admin') {
+            $_SESSION['user'] = $user['email'];
+            header("Location: index.php?page=anggota");
+            exit();
+        } else {
+            $login_error = "Password yang Anda masukkan salah!";
+        }
+    } else {
+        $login_error = "Email tidak terdaftar pada sistem kami.";
+    }
+}
+
+// ==========================================
+// ACTION: LOGOUT
+// ==========================================
+if (isset($_GET['action']) && $_GET['action'] == 'logout') {
+    session_destroy();
+    header("Location: index.php?page=home");
+    exit();
+}
+
+// ==========================================
+// ACTION: TAMBAH ANGGOTA (Hanya Jika Login)
+// ==========================================
+if (isset($_POST['tambah_anggota']) && isset($_SESSION['user'])) {
+    $nama = $conn->real_escape_string($_POST['nama']);
+    $nim = $conn->real_escape_string($_POST['nim']);
+    $vokal = $conn->real_escape_string($_POST['vokal']);
+    $status = $conn->real_escape_string($_POST['status']);
+
+    $sql = "INSERT INTO anggota (nama, nim, vokal, status) VALUES ('$nama', '$nim', '$vokal', '$status')";
+    $conn->query($sql);
+    header("Location: index.php?page=anggota");
+    exit();
+}
+
+// ==========================================
+// ACTION: UBAH STATUS KEAKTIFAN (Hanya Jika Login)
+// ==========================================
+if (isset($_GET['action']) && $_GET['action'] == 'toggle_status' && isset($_SESSION['user'])) {
+    $id = (int)$_GET['id'];
+    
+    $check = $conn->query("SELECT status FROM anggota WHERE id = $id");
+    if ($check->num_rows > 0) {
+        $current = $check->fetch_assoc()['status'];
+        $new_status = ($current == 'Aktif') ? 'Tidak Aktif' : 'Aktif';
+        
+        $conn->query("UPDATE anggota SET status = '$new_status' WHERE id = $id");
+    }
+    header("Location: index.php?page=anggota");
+    exit();
+}
+
+// ==========================================
+// QUERY DATA UNTUK CORE DASHBOARD
+// ==========================================
+$total_anggota = $conn->query("SELECT COUNT(*) as total FROM anggota")->fetch_assoc()['total'];
+$aktif_count = $conn->query("SELECT COUNT(*) as total FROM anggota WHERE status = 'Aktif'")->fetch_assoc()['total'];
+$tidak_aktif_count = $conn->query("SELECT COUNT(*) as total FROM anggota WHERE status = 'Tidak Aktif'")->fetch_assoc()['total'];
+
+// Ambil list seluruh anggota
+$anggota_list = [];
+$res = $conn->query("SELECT * FROM anggota ORDER BY id DESC");
+while ($row = $res->fetch_assoc()) {
+    $anggota_list[] = $row;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
